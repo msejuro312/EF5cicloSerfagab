@@ -1,0 +1,61 @@
+@model ConsumoEF5.Models.OrdenCompra
+
+@{
+    ViewData["Title"] = "Eliminar Orden de Compra";
+}
+
+<div class="card shadow-lg">
+    <div class="card-body">
+        <h1 class="card-title text-center text-danger">
+            <i class="fa-solid fa-trash me-2"></i>Eliminar Orden de Compra
+        </h1>
+        <h3 class="text-center">¿Estás seguro de eliminar esta orden de compra?</h3>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-3">Orden</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.IdOrdenCompra)</dd>
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Proveedor)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Proveedor)</dd>
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Fecha)</dt>
+            <dd class="col-sm-9">@Model.Fecha.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Estado)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Estado)</dd>
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Total)</dt>
+            <dd class="col-sm-9">S/ @Model.Total.ToString("N2")</dd>
+            <dt class="col-sm-3">@Html.DisplayNameFor(model => model.Observaciones)</dt>
+            <dd class="col-sm-9">@Html.DisplayFor(model => model.Observaciones)</dd>
+        </dl>
+
+        <form asp-action="Delete" id="formEliminar">
+            <input type="hidden" asp-for="IdOrdenCompra" />
+            <div class="d-flex gap-2">
+                <a asp-action="Index" class="btn btn-outline-dark">
+                    <i class="fa-solid fa-reply"></i> Regresar
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById("formEliminar").addEventListener("submit", function (e) {
+            e.preventDefault();
+            var form = this;
+            Swal.fire({
+                icon: 'warning',
+                title: '¿Está seguro?',
+                text: 'Esta acción no se puede deshacer',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#d33'
+            }).then(function (result) {
+                if (result.isConfirmed) form.submit();
+            });
+        });
+    </script>
+}

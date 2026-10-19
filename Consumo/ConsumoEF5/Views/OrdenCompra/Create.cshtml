@@ -1,0 +1,141 @@
+@model ConsumoEF5.Models.OrdenCompraVM
+
+@{
+    ViewData["Title"] = "Nueva Orden de Compra";
+    var materiales = (ViewBag.materiales as List<ConsumoEF5.Models.Material>)
+        ?? new List<ConsumoEF5.Models.Material>();
+}
+
+<div class="card shadow-lg">
+    <div class="card-body">
+        <h1 class="card-title text-center">
+            <i class="fa-solid fa-cart-plus me-2 text-success"></i>Nueva Orden de Compra
+        </h1>
+
+        @if (!string.IsNullOrEmpty(TempData["message"]?.ToString()))
+        {
+            <div class="alert alert-@(TempData["tipo"] ?? "info") alert-dismissible fade show" role="alert">
+                @TempData["message"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <form asp-action="Create" method="post">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label asp-for="IdProveedor" class="form-label"></label>
+                    <select asp-for="IdProveedor" asp-items="@ViewBag.proveedores" class="form-select">
+                        <option value="">-- Seleccione proveedor --</option>
+                    </select>
+                    <span asp-validation-for="IdProveedor" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Fecha" class="form-label"></label>
+                    <input asp-for="Fecha" class="form-control" type="date" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="Estado" class="form-label"></label>
+                    <input asp-for="Estado" class="form-control" readonly />
+                </div>
+                <div class="col-md-12">
+                    <label asp-for="Observaciones" class="form-label"></label>
+                    <input asp-for="Observaciones" class="form-control" />
+                </div>
+            </div>
+
+            <hr />
+            <h4 class="text-dark"><i class="fa-solid fa-list me-2"></i>Detalle de la orden</h4>
+            <table id="tablaDetalle" class="table table-hover table-responsive table-secondary">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Material</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <button type="button" id="btnAgregar" class="btn btn-primary">
+                <i class="fa-solid fa-plus"></i> Agregar material
+            </button>
+
+            <hr />
+            <div class="d-flex flex-wrap justify-content-between align-items-center">
+                <h4 class="text-dark m-0">Total: S/ <span id="lblTotal" class="text-success fw-bold">0.00</span></h4>
+                <div class="d-flex gap-2">
+                    <a asp-action="Index" class="btn btn-outline-dark">
+                        <i class="fa-solid fa-reply"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar orden
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var materiales = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(materiales));
+        var contador = 0;
+
+        function nuevaFila(index) {
+            var fila = '<tr>';
+            fila += '<td><select name="Detalles[' + index + '].IdMaterial" class="form-select selectMaterial">';
+            fila += '<option value="">-- Seleccione material --</option>';
+            for (var i = 0; i < materiales.length; i++) {
+                fila += '<option value="' + materiales[i].IdMaterial + '">' + materiales[i].Nombre + '</option>';
+            }
+            fila += '</select></td>';
+            fila += '<td><input type="number" step="0.01" min="0" name="Detalles[' + index + '].Cantidad" class="form-control inputCantidad" value="0" /></td>';
+            fila += '<td><input type="number" step="0.01" min="0" name="Detalles[' + index + '].PrecioUnitario" class="form-control inputPrecio" value="0" /></td>';
+            fila += '<td class="tdSubtotal text-end fw-bold">0.00</td>';
+            fila += '<td class="text-center"><button type="button" class="btn btn-sm btn-danger btnQuitar"><i class="fa-solid fa-trash"></i></button></td>';
+            fila += '</tr>';
+            return fila;
+        }
+
+        function recalcular() {
+            var total = 0;
+            $('#tablaDetalle tbody tr').each(function () {
+                var cantidad = parseFloat($(this).find('.inputCantidad').val()) || 0;
+                var precio = parseFloat($(this).find('.inputPrecio').val()) || 0;
+                var subtotal = cantidad * precio;
+                $(this).find('.tdSubtotal').text(subtotal.toFixed(2));
+                total += subtotal;
+            });
+            $('#lblTotal').text(total.toFixed(2));
+        }
+
+        $('#btnAgregar').click(function () {
+            $('#tablaDetalle tbody').append(nuevaFila(contador));
+            contador++;
+            recalcular();
+        });
+
+        $(document).on('change', '.selectMaterial, .inputCantidad, .inputPrecio', function () {
+            recalcular();
+        });
+
+        $(document).on('click', '.btnQuitar', function () {
+            $(this).closest('tr').remove();
+            recalcular();
+        });
+
+        $('form').on('submit', function () {
+            var i = 0;
+            $('#tablaDetalle tbody tr').each(function () {
+                var $tr = $(this);
+                $tr.find('.selectMaterial').attr('name', 'Detalles[' + i + '].IdMaterial');
+                $tr.find('.inputCantidad').attr('name', 'Detalles[' + i + '].Cantidad');
+                $tr.find('.inputPrecio').attr('name', 'Detalles[' + i + '].PrecioUnitario');
+                i++;
+            });
+            return true;
+        });
+    </script>
+}
